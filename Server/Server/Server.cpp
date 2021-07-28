@@ -10,7 +10,7 @@
 #include <vector>
 #include <chrono>
 #include <iostream>
-
+#include <time.h>
 using namespace std;
 
 // Link with ws2_32.lib
@@ -54,6 +54,11 @@ auto start = chrono::steady_clock::now();
 int number_of_pongs = 0;
 
 int received_a_message_flag = 0;
+
+int sum_of_pong_delay = 0;
+
+time_t start_time;
+time_t end_time; 
 
 int Initialize()
 {
@@ -144,18 +149,23 @@ void recv()
         SendBuf[0] = ACK;
         send_to(SendBuf);
     }
-    if (initiate_ping_pong == 1)
+    if (initiate_ping_pong == 1) // initiate ping-pong mecanism
     {
+        start_time = time(NULL);
         SendBuf[0] = PING;
         initiate_ping_pong = 2;
         send_to(SendBuf);
     }
     if (RecvBuf[0] == PONG) // if PONG message received
     {
+        end_time = time(NULL);
         received_a_message_flag = 1;
         number_of_pongs++;
+        sum_of_pong_delay += (double)(end_time - start_time);
+        std::cout << "Average Time: " << (double)(end_time - start_time) << " Seconds" << std::endl;
         printf("From client: PONG \n");
         SendBuf[0] = PING;
+        start_time = time(NULL);
         send_to(SendBuf);
     }
     if(initiate_ping_pong != 2)
@@ -184,7 +194,10 @@ void Update()
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
     {
         cout << "Number of pongs received in 10 seconds : " << number_of_pongs << endl;
+        if(number_of_pongs > 0)
+            cout << "With the average delay : " << sum_of_pong_delay / number_of_pongs << " seconds" << endl;
         number_of_pongs = 0;
+        sum_of_pong_delay = 0;
     }
     memset(RecvBuf, 0, strlen(RecvBuf));
 }

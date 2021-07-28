@@ -9,6 +9,10 @@
 #include <Ws2tcpip.h>
 #include <stdio.h>
 #include <string.h>
+#include <chrono>
+#include <iostream>
+
+using namespace std;
 
 // Link with ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
@@ -28,6 +32,10 @@ int BufLen = 1024;
 int RecvAddrSize = sizeof(RecvAddr);
 
 bool isConnected = false;
+
+auto start = chrono::steady_clock::now();
+
+int received_a_message_flag = 0;
 
 enum Message_Type
 {
@@ -104,19 +112,21 @@ void recv()
     }
     if (RecvBuf[0] == ACK)
     {
+        received_a_message_flag = 1;
         isConnected = true;
         printf("From server: Welcome to the server! You are connected! \n");        
     }
     else if (RecvBuf[0] == PING) // PING message
     {
+        received_a_message_flag = 1;
         printf("From server: PING \n");
         SendBuf[0] = PONG;
         send_to(SendBuf);
     }
-    else if (RecvBuf[0] == PONG) // PONG message
-    {
-        printf("From server: PONG \n");
-    }
+    //else if (RecvBuf[0] == PONG) // PONG message
+    //{
+    //    printf("From server: PONG \n");
+    //}
 }
 
 
@@ -130,11 +140,26 @@ void Update()
         SendBuf[0] = HELLO;
         send_to(SendBuf);
     }
+
     recv();
+
+    auto end = chrono::steady_clock::now();
+    cout << "Elapsed time in seconds: "
+        << chrono::duration_cast<chrono::seconds>(end - start).count()
+        << " sec" << endl;
+    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0)
+    {
+        if (received_a_message_flag == 1)
+            cout << "There were some received messages!" << endl;
+        else
+            cout << "There were no received messages!" << endl;
+        received_a_message_flag = 0;
+    }
 }
 
 int main()
 {
+    auto start = chrono::steady_clock::now();
     int return_initialize;
     return_initialize = Initialize();
     if (return_initialize == 1)
