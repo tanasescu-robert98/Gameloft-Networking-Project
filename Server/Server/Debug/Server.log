@@ -1,5 +1,4 @@
 ﻿  Server.cpp
-D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(164,61): warning C4244: '+=': conversion from 'double' to 'int', possible loss of data
-D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(96): warning C4715: 'Initialize': not all control paths return a value
-D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(112): warning C4715: 'send_to': not all control paths return a value
+D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(113): warning C4715: 'send_to': not all control paths return a value
+D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(97): warning C4715: 'Initialize': not all control paths return a value
   Server.vcxproj -> D:\Personal_Github\gameloft_multiplayer\Server\Debug\Server.exe

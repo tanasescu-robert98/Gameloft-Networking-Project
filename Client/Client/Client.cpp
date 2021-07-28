@@ -147,12 +147,20 @@ void Update()
     cout << "Elapsed time in seconds: "
         << chrono::duration_cast<chrono::seconds>(end - start).count()
         << " sec" << endl;
-    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0)
+    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
+        && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
     {
         if (received_a_message_flag == 1)
+        {
             cout << "There were some received messages!" << endl;
+        }
         else
-            cout << "There were no received messages!" << endl;
+        {
+            cout << "There were no received messages. Closing connection!" << endl;
+            closesocket(SendSocket);
+            WSACleanup();
+            exit(0);
+        }
         received_a_message_flag = 0;
     }
 }

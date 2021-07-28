@@ -11,6 +11,7 @@
 #include <chrono>
 #include <iostream>
 #include <time.h>
+#include <list>
 using namespace std;
 
 // Link with ws2_32.lib
@@ -24,9 +25,7 @@ WSADATA wsaData;
 SOCKET RecvSocket;
 struct sockaddr_in RecvAddr;
 
-sockaddr_in vector_sock[100];
 vector<struct sockaddr_in> clients;
-//char vector_adrese[100][100];
 int numar_adrese = 0;
 int address_found = 0;
 
@@ -55,10 +54,12 @@ int number_of_pongs = 0;
 
 int received_a_message_flag = 0;
 
-int sum_of_pong_delay = 0;
+double sum_of_pong_delay = 0;
 
 time_t start_time;
-time_t end_time; 
+time_t end_time;
+
+list<string> received_messages = { "ana" };
 
 int Initialize()
 {
@@ -158,11 +159,12 @@ void recv()
     }
     if (RecvBuf[0] == PONG) // if PONG message received
     {
+        received_messages.push_back(RecvBuf);
         end_time = time(NULL);
         received_a_message_flag = 1;
         number_of_pongs++;
         sum_of_pong_delay += (double)(end_time - start_time);
-        std::cout << "Average Time: " << (double)(end_time - start_time) << " Seconds" << std::endl;
+        /*std::cout << "Average Time: " << (double)(end_time - start_time) << " Seconds" << std::endl;*/
         printf("From client: PONG \n");
         SendBuf[0] = PING;
         start_time = time(NULL);
@@ -186,9 +188,15 @@ void Update()
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0)
     {
         if (received_a_message_flag == 1)
+        { 
             cout << "There were some received messages!" << endl;
+        }
         else
-            cout << "There were no received messages!" << endl;
+        {
+            cout << "There were no received messages. Closing connection!" << endl;
+            if(clients.size() > 0)
+                clients.pop_back();
+        }
         received_a_message_flag = 0;
     }
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
