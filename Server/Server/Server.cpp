@@ -8,6 +8,8 @@
 #include <Ws2tcpip.h>
 #include <stdio.h>
 #include <vector>
+#include <chrono>
+#include <iostream>
 
 using namespace std;
 
@@ -45,7 +47,13 @@ enum Message_Type
     PONG = 4
 };
 
-int ping_pong = 0;
+int initiate_ping_pong = 0;
+
+auto start = chrono::steady_clock::now();
+
+int number_of_pongs = 0;
+
+int received_a_message_flag = 0;
 
 int Initialize()
 {
@@ -100,6 +108,7 @@ int send_to(char sendbuffer[1024])
 
 void recv()
 {
+    
     //-----------------------------------------------
     // Call the recvfrom function to receive datagrams
     // on the bound socket.
@@ -127,6 +136,7 @@ void recv()
     }
     if (address_found == false)
     {
+        received_a_message_flag = 1;
         char Sender_addr[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &SenderAddr.sin_addr, Sender_addr, sizeof(Sender_addr));
         printf("%s with port %d connected! \n", Sender_addr, SenderAddr.sin_port);
@@ -134,28 +144,22 @@ void recv()
         SendBuf[0] = ACK;
         send_to(SendBuf);
     }
-
-    if (ping_pong == 1)
+    if (initiate_ping_pong == 1)
     {
         SendBuf[0] = PING;
-        ping_pong = 2;
+        initiate_ping_pong = 2;
         send_to(SendBuf);
     }
-    if (RecvBuf[0] == PING) // PING message
+    if (RecvBuf[0] == PONG) // if PONG message received
     {
-        printf("From client: PING \n");
-        SendBuf[0] = PONG;
-        send_to(SendBuf);
-    }
-    else if (RecvBuf[0] == PONG) // PONG message
-    {
-        
+        received_a_message_flag = 1;
+        number_of_pongs++;
         printf("From client: PONG \n");
         SendBuf[0] = PING;
         send_to(SendBuf);
     }
-    if(ping_pong != 2)
-    ping_pong = 1;
+    if(initiate_ping_pong != 2)
+        initiate_ping_pong = 1; 
 }
 
 
@@ -163,10 +167,31 @@ void recv()
 void Update()
 {
     recv();
+
+    auto end = chrono::steady_clock::now();
+
+    cout << "Elapsed time in seconds: "
+        << chrono::duration_cast<chrono::seconds>(end - start).count()
+        << " sec" << endl;
+    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0)
+    {
+        if (received_a_message_flag == 1)
+            cout << "There were some received messages!" << endl;
+        else
+            cout << "There were no received messages!" << endl;
+        received_a_message_flag = 0;
+    }
+    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
+    {
+        cout << "Number of pongs received in 10 seconds : " << number_of_pongs << endl;
+        number_of_pongs = 0;
+    }
+    memset(RecvBuf, 0, strlen(RecvBuf));
 }
 
 int main()
 {
+    auto start = chrono::steady_clock::now();
     int return_initialize;
     return_initialize = Initialize();
 
