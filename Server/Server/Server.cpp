@@ -59,7 +59,7 @@ double sum_of_pong_delay = 0;
 time_t start_time;
 time_t end_time;
 
-list<string> received_messages = { "ana" };
+list<string> received_messages;
 
 int Initialize()
 {
@@ -131,24 +131,28 @@ void recv()
             wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
         }
     }
-    address_found = false;
-    for (struct sockaddr_in connected_client : clients) {
-        if (connected_client.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr &&
-            connected_client.sin_port == SenderAddr.sin_port) 
-        {
-            address_found = true;
-            break;
-        }
-    }
-    if (address_found == false)
+    if (RecvBuf[0] == HELLO)
     {
-        received_a_message_flag = 1;
-        char Sender_addr[INET_ADDRSTRLEN];
-        inet_ntop(AF_INET, &SenderAddr.sin_addr, Sender_addr, sizeof(Sender_addr));
-        printf("%s with port %d connected! \n", Sender_addr, SenderAddr.sin_port);
-        clients.push_back(SenderAddr);
-        SendBuf[0] = ACK;
-        send_to(SendBuf);
+        address_found = false;
+        // search for the address and port in the vector
+        for (struct sockaddr_in connected_client : clients) {
+            if (connected_client.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr &&
+                connected_client.sin_port == SenderAddr.sin_port)
+            {
+                address_found = true;
+                break;
+            }
+        }
+        if (address_found == false) // if the address and port are new add them to the vector
+        {
+            received_a_message_flag = 1;
+            char Sender_addr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &SenderAddr.sin_addr, Sender_addr, sizeof(Sender_addr));
+            printf("%s with port %d connected! \n", Sender_addr, SenderAddr.sin_port);
+            clients.push_back(SenderAddr);
+            SendBuf[0] = ACK;
+            send_to(SendBuf);
+        }
     }
     if (initiate_ping_pong == 1) // initiate ping-pong mecanism
     {
@@ -170,7 +174,8 @@ void recv()
         start_time = time(NULL);
         send_to(SendBuf);
     }
-    if(initiate_ping_pong != 2)
+    // if ping pong mecanism wasn't initiated yet, initiate it now
+    if(initiate_ping_pong == 0)
         initiate_ping_pong = 1; 
 }
 
@@ -185,7 +190,8 @@ void Update()
     cout << "Elapsed time in seconds: "
         << chrono::duration_cast<chrono::seconds>(end - start).count()
         << " sec" << endl;
-    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0)
+    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
+        && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
     {
         if (received_a_message_flag == 1)
         { 
