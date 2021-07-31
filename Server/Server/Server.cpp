@@ -61,6 +61,8 @@ time_t end_time;
 
 list<string> received_messages;
 
+string recv_message;
+
 int Initialize()
 {
     //-----------------------------------------------
@@ -96,8 +98,6 @@ if (iResult != 0) {
 
 }
 
-
-
 int send_to(char sendbuffer[1024])
 {
     //strcpy_s(SendBuf, "Salut de la server!");
@@ -116,7 +116,9 @@ int send_to(char sendbuffer[1024])
 
 void message_handler()
 {
-    if (RecvBuf[0] == HELLO)
+    recv_message = received_messages.front();
+    received_messages.pop_front();
+    if (recv_message[0] == HELLO) // if hello message received
     {
         address_found = false;
         // search for the address and port in the vector
@@ -146,9 +148,8 @@ void message_handler()
         initiate_ping_pong = 2;
         send_to(SendBuf);
     }
-    if (RecvBuf[0] == PONG) // if PONG message received
+    if (recv_message[0] == PONG) // if PONG message received
     {
-        received_messages.push_back(RecvBuf);
         end_time = time(NULL);
         received_a_message_flag = 1;
         number_of_pongs++;
@@ -162,6 +163,7 @@ void message_handler()
     // if ping pong mecanism wasn't initiated yet, initiate it now
     if (initiate_ping_pong == 0)
         initiate_ping_pong = 1;
+    recv_message.clear();
 }
 
 void recv()
@@ -183,7 +185,9 @@ void recv()
             wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
         }
     }
-    message_handler();
+    received_messages.push_back(RecvBuf);
+    if(received_messages.size() > 0)
+        message_handler();
 }
 
 void Update()
