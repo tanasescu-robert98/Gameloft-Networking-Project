@@ -96,6 +96,8 @@ if (iResult != 0) {
 
 }
 
+
+
 int send_to(char sendbuffer[1024])
 {
     //strcpy_s(SendBuf, "Salut de la server!");
@@ -112,25 +114,8 @@ int send_to(char sendbuffer[1024])
     }
 }
 
-void recv()
+void message_handler()
 {
-    
-    //-----------------------------------------------
-    // Call the recvfrom function to receive datagrams
-    // on the bound socket.
-    wprintf(L"Receiving datagrams...\n");
-    iResult = recvfrom(RecvSocket,
-        RecvBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, &SenderAddrSize);
-    if (iResult == SOCKET_ERROR) {
-        if (WSAGetLastError() == WSAEWOULDBLOCK)
-        {
-            return;
-        }
-        else
-        {
-            wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
-        }
-    }
     if (RecvBuf[0] == HELLO)
     {
         address_found = false;
@@ -175,11 +160,31 @@ void recv()
         send_to(SendBuf);
     }
     // if ping pong mecanism wasn't initiated yet, initiate it now
-    if(initiate_ping_pong == 0)
-        initiate_ping_pong = 1; 
+    if (initiate_ping_pong == 0)
+        initiate_ping_pong = 1;
 }
 
-
+void recv()
+{
+    
+    //-----------------------------------------------
+    // Call the recvfrom function to receive datagrams
+    // on the bound socket.
+    wprintf(L"Receiving datagrams...\n");
+    iResult = recvfrom(RecvSocket,
+        RecvBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, &SenderAddrSize);
+    if (iResult == SOCKET_ERROR) {
+        if (WSAGetLastError() == WSAEWOULDBLOCK)
+        {
+            return;
+        }
+        else
+        {
+            wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
+        }
+    }
+    message_handler();
+}
 
 void Update()
 {
@@ -228,7 +233,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(2000); //sleeps 10 ms
+        Sleep(5000); //sleeps 10 ms
     }
 
 

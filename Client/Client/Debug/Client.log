@@ -1,4 +1,4 @@
 ﻿  Client.cpp
-D:\Personal_Github\gameloft_multiplayer\Client\Client\Client.cpp(93): warning C4715: 'send_to': not all control paths return a value
 D:\Personal_Github\gameloft_multiplayer\Client\Client\Client.cpp(77): warning C4715: 'Initialize': not all control paths return a value
+D:\Personal_Github\gameloft_multiplayer\Client\Client\Client.cpp(93): warning C4715: 'send_to': not all control paths return a value
   Client.vcxproj -> D:\Personal_Github\gameloft_multiplayer\Client\Debug\Client.exe
