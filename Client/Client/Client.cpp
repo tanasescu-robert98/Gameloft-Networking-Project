@@ -108,19 +108,6 @@ void message_handler()
             send_to(SendBuf);
             break;
     }
-    //if (RecvBuf[0] == ACK) // if client received ACK message from server
-    //{
-    //    received_a_message_flag = 1;
-    //    isConnected = true;
-    //    printf("From server: Welcome to the server! You are connected! \n");
-    //}
-    //else if (RecvBuf[0] == PING) // if client received PING message from server
-    //{
-    //    received_a_message_flag = 1;
-    //    printf("From server: PING \n");
-    //    SendBuf[0] = PONG;
-    //    send_to(SendBuf);
-    //}
 }
 
 void recv()
@@ -141,6 +128,7 @@ void recv()
             wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
         }
     }
+
     message_handler();
 }
 
