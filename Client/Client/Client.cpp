@@ -132,16 +132,8 @@ void recv()
     message_handler();
 }
 
-void Update()
+void time_handler()
 {
-    if (isConnected == false)
-    {
-        SendBuf[0] = HELLO;
-        send_to(SendBuf);
-    }
-
-    recv();
-
     auto end = chrono::steady_clock::now();
     cout << "Elapsed time in seconds: "
         << chrono::duration_cast<chrono::seconds>(end - start).count()
@@ -162,6 +154,19 @@ void Update()
         }
         received_a_message_flag = 0;
     }
+}
+
+void Update()
+{
+    if (isConnected == false)
+    {
+        SendBuf[0] = HELLO;
+        send_to(SendBuf);
+    }
+
+    recv();
+
+    time_handler();
 }
 
 int main()

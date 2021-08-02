@@ -12,6 +12,7 @@
 #include <iostream>
 #include <time.h>
 #include <list>
+#include <map>
 using namespace std;
 
 // Link with ws2_32.lib
@@ -203,10 +204,8 @@ void recv()
     }
 }
 
-void Update()
+void time_handler()
 {
-    recv();
-
     auto end = chrono::steady_clock::now();
 
     cout << "Elapsed time in seconds: "
@@ -216,13 +215,13 @@ void Update()
         && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
     {
         if (received_a_message_flag == 1)
-        { 
+        {
             cout << "There were some received messages!" << endl;
         }
         else
         {
             cout << "There were no received messages. Closing connection!" << endl;
-            if(clients.size() > 0)
+            if (clients.size() > 0)
                 clients.pop_back();
         }
         received_a_message_flag = 0;
@@ -230,11 +229,19 @@ void Update()
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
     {
         cout << "Number of pongs received in 10 seconds : " << number_of_pongs << endl;
-        if(number_of_pongs > 0)
+        if (number_of_pongs > 0)
             cout << "With the average delay : " << sum_of_pong_delay / number_of_pongs << " seconds" << endl;
         number_of_pongs = 0;
         sum_of_pong_delay = 0;
     }
+}
+
+void Update()
+{
+    recv();
+
+    time_handler();
+
     memset(RecvBuf, 0, strlen(RecvBuf));
 }
 
