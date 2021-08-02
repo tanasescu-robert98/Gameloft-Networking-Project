@@ -70,6 +70,19 @@ struct Received_Messages_Struct
 
 list<Received_Messages_Struct> received_messages_list;
 
+struct Connected_Client
+{
+    sockaddr_in Address;
+    int ten_seconds_flag;
+    int was_connected_before;
+};
+
+vector<Connected_Client> vector_clienti;
+
+int new_client_added = 0;
+
+
+
 int Initialize()
 {
     //-----------------------------------------------
@@ -197,6 +210,26 @@ void recv()
     new_message_received.Sender_Address = SenderAddr;
     new_message_received.Sender_Message = RecvBuf;
     received_messages_list.push_back(new_message_received);
+
+    new_client_added = 0;
+    Connected_Client new_client;
+    new_client.Address = SenderAddr;
+    new_client.ten_seconds_flag = 0;
+    new_client.was_connected_before = 0;
+    for (Connected_Client& iterator: vector_clienti)
+    {
+        if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
+            && iterator.Address.sin_port == SenderAddr.sin_port)
+        {
+            new_client_added = 1;
+            break;
+        }
+    }
+    if (new_client_added == 0)
+    {
+        printf("AICI");
+        vector_clienti.push_back(new_client);
+    }
 
     if (received_messages_list.size() > 0)
     {
