@@ -59,9 +59,15 @@ double sum_of_pong_delay = 0;
 time_t start_time;
 time_t end_time;
 
-list<string> received_messages;
-
 string recv_message;
+
+struct Received_Messages_Struct
+{
+    string Sender_Message;
+    sockaddr_in Sender_Address;
+};
+
+list<Received_Messages_Struct> received_messages_list;
 
 int Initialize()
 {
@@ -116,8 +122,8 @@ int send_to(char sendbuffer[1024])
 
 void message_handler()
 {
-    recv_message = received_messages.front();
-    received_messages.pop_front();
+    recv_message = received_messages_list.front().Sender_Message;
+    received_messages_list.pop_front();
     if (recv_message[0] == HELLO) // if hello message received
     {
         address_found = false;
@@ -168,7 +174,6 @@ void message_handler()
 
 void recv()
 {
-    
     //-----------------------------------------------
     // Call the recvfrom function to receive datagrams
     // on the bound socket.
@@ -185,9 +190,17 @@ void recv()
             wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
         }
     }
-    received_messages.push_back(RecvBuf);
-    if(received_messages.size() > 0)
+
+    Received_Messages_Struct new_message_received;
+    new_message_received.Sender_Message.clear();
+    new_message_received.Sender_Address = SenderAddr;
+    new_message_received.Sender_Message = RecvBuf;
+    received_messages_list.push_back(new_message_received);
+
+    if (received_messages_list.size() > 0)
+    {
         message_handler();
+    }
 }
 
 void Update()
@@ -239,7 +252,6 @@ int main()
         Update();
         Sleep(5000); //sleeps 10 ms
     }
-
 
     //-----------------------------------------------
     // Close the socket when finished receiving datagrams
