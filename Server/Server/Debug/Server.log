@@ -1,4 +1,5 @@
 ﻿  Server.cpp
-D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(99): warning C4715: 'Initialize': not all control paths return a value
-D:\Personal_Github\gameloft_multiplayer\Server\Server\Server.cpp(117): warning C4715: 'send_to': not all control paths return a value
-  Server.vcxproj -> D:\Personal_Github\gameloft_multiplayer\Server\Debug\Server.exe
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(99): warning C4715: 'Initialize': not all control paths return a value
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(115): warning C4715: 'send_to': not all control paths return a value
+  LINK : D:\Github\gameloft_multiplayer\Server\Debug\Server.exe not found or not built by the last incremental link; performing full link
+  Server.vcxproj -> D:\Github\gameloft_multiplayer\Server\Debug\Server.exe
