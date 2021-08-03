@@ -77,7 +77,7 @@ struct Connected_Client
     int vector_pos;
 };
 
-vector<Connected_Client> vector_clienti;
+vector<Connected_Client> vector_connected_clients;
 
 int client_found = 0;
 
@@ -173,7 +173,7 @@ void message_handler()
         end_time = time(NULL);
         received_a_message_flag = 1;
 
-        for (Connected_Client& iterator : vector_clienti)
+        for (Connected_Client& iterator : vector_connected_clients)
         {
             if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
                 && iterator.Address.sin_port == SenderAddr.sin_port)
@@ -184,7 +184,6 @@ void message_handler()
 
         number_of_pongs++;
         sum_of_pong_delay += (double)(end_time - start_time);
-        /*std::cout << "Average Time: " << (double)(end_time - start_time) << " Seconds" << std::endl;*/
         printf("From client: PONG \n");
         SendBuf[0] = PING;
         start_time = time(NULL);
@@ -225,7 +224,7 @@ void recv()
     Connected_Client new_client;
     new_client.Address = SenderAddr;
     new_client.is_active_flag = 0;
-    for (Connected_Client& iterator: vector_clienti)
+    for (Connected_Client& iterator: vector_connected_clients)
     {
         if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
             && iterator.Address.sin_port == SenderAddr.sin_port)
@@ -236,16 +235,14 @@ void recv()
     }
     if (client_found == 0)
     {
-        new_client.vector_pos = vector_clienti.size();
-        vector_clienti.push_back(new_client);
+        new_client.vector_pos = vector_connected_clients.size();
+        vector_connected_clients.push_back(new_client);
     }
 
-    for (Connected_Client& iterator : vector_clienti)
+    /*for (Connected_Client& iterator : vector_connected_clients)
     {
-        printf("\n%d\n", iterator.is_active_flag);
-    }
-
-    
+        printf("\nActive flag: %d \n", iterator.is_active_flag);
+    }*/
 
     if (received_messages_list.size() > 0)
     {
@@ -263,22 +260,27 @@ void time_handler()
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
         && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
     {
-        for (Connected_Client& iterator : vector_clienti)
+        vector<int> clients_to_erase;
+        for (int i = 0; i < vector_connected_clients.size(); i++)
         {
             char ip_of_client[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &iterator.Address.sin_addr, ip_of_client, sizeof(ip_of_client));
-            if (iterator.is_active_flag == 0)
+            inet_ntop(AF_INET, &vector_connected_clients[i].Address.sin_addr, ip_of_client, sizeof(ip_of_client));
+            if (vector_connected_clients[i].is_active_flag == 0)
             {
-                cout << "There were no received messages from "<< ip_of_client << " with port " << iterator.Address.sin_port << ".Closing connection!" << endl;
-                vector_clienti.erase(vector_clienti.begin() + iterator.vector_pos);
+                cout << "There were no received messages from "<< ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << ".Closing connection!" << endl;
+                clients_to_erase.push_back(i);
             }
             else
             {
-                cout << "There were some received messages from " << ip_of_client << " with port " << iterator.Address.sin_port << "!" << endl;
+                cout << "There were some received messages from " << ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << "!" << endl;
             }
-            iterator.is_active_flag = 0;
+            vector_connected_clients[i].is_active_flag = 0;
         }
-        printf("\n SIZE: %d \n", vector_clienti.size());
+        for (int i : clients_to_erase)
+        {
+            vector_connected_clients.erase(vector_connected_clients.begin() + i);
+        }
+        //printf("\nSIZE of vector_connected_clients: %d \n", vector_connected_clients.size());
     }
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
     {
