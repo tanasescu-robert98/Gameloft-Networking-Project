@@ -73,13 +73,13 @@ list<Received_Messages_Struct> received_messages_list;
 struct Connected_Client
 {
     sockaddr_in Address;
-    int ten_seconds_flag;
-    int was_connected_before;
+    int is_active_flag;
+    int vector_pos;
 };
 
 vector<Connected_Client> vector_clienti;
 
-int new_client_added = 0;
+int client_found = 0;
 
 
 
@@ -172,6 +172,16 @@ void message_handler()
     {
         end_time = time(NULL);
         received_a_message_flag = 1;
+
+        for (Connected_Client& iterator : vector_clienti)
+        {
+            if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
+                && iterator.Address.sin_port == SenderAddr.sin_port)
+            {
+                iterator.is_active_flag = 1;
+            }
+        }
+
         number_of_pongs++;
         sum_of_pong_delay += (double)(end_time - start_time);
         /*std::cout << "Average Time: " << (double)(end_time - start_time) << " Seconds" << std::endl;*/
@@ -211,25 +221,31 @@ void recv()
     new_message_received.Sender_Message = RecvBuf;
     received_messages_list.push_back(new_message_received);
 
-    new_client_added = 0;
+    client_found = 0;
     Connected_Client new_client;
     new_client.Address = SenderAddr;
-    new_client.ten_seconds_flag = 0;
-    new_client.was_connected_before = 0;
+    new_client.is_active_flag = 0;
     for (Connected_Client& iterator: vector_clienti)
     {
         if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
             && iterator.Address.sin_port == SenderAddr.sin_port)
         {
-            new_client_added = 1;
+            client_found = 1;
             break;
         }
     }
-    if (new_client_added == 0)
+    if (client_found == 0)
     {
-        printf("AICI");
+        new_client.vector_pos = vector_clienti.size();
         vector_clienti.push_back(new_client);
     }
+
+    for (Connected_Client& iterator : vector_clienti)
+    {
+        printf("\n%d\n", iterator.is_active_flag);
+    }
+
+    
 
     if (received_messages_list.size() > 0)
     {
@@ -247,17 +263,22 @@ void time_handler()
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
         && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
     {
-        if (received_a_message_flag == 1)
+        for (Connected_Client& iterator : vector_clienti)
         {
-            cout << "There were some received messages!" << endl;
+            char ip_of_client[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &iterator.Address.sin_addr, ip_of_client, sizeof(ip_of_client));
+            if (iterator.is_active_flag == 0)
+            {
+                cout << "There were no received messages from "<< ip_of_client << " with port " << iterator.Address.sin_port << ".Closing connection!" << endl;
+                vector_clienti.erase(vector_clienti.begin() + iterator.vector_pos);
+            }
+            else
+            {
+                cout << "There were some received messages from " << ip_of_client << " with port " << iterator.Address.sin_port << "!" << endl;
+            }
+            iterator.is_active_flag = 0;
         }
-        else
-        {
-            cout << "There were no received messages. Closing connection!" << endl;
-            if (clients.size() > 0)
-                clients.pop_back();
-        }
-        received_a_message_flag = 0;
+        printf("\n SIZE: %d \n", vector_clienti.size());
     }
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
     {
@@ -290,7 +311,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(5000); //sleeps 10 ms
+        Sleep(1000); //sleeps 10 ms
     }
 
     //-----------------------------------------------
