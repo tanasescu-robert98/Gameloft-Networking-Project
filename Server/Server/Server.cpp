@@ -280,7 +280,7 @@ void time_handler()
         {
             vector_connected_clients.erase(vector_connected_clients.begin() + i);
         }
-        //printf("\nSIZE of vector_connected_clients: %d \n", vector_connected_clients.size());
+        cout << "\nSIZE of vector_connected_clients : " << vector_connected_clients.size() << endl;
     }
     if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
     {
