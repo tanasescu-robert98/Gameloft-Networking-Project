@@ -26,7 +26,7 @@ WSADATA wsaData;
 SOCKET RecvSocket;
 struct sockaddr_in RecvAddr;
 
-vector<struct sockaddr_in> clients;
+//vector<struct sockaddr_in> clients;
 int numar_adrese = 0;
 int address_found = 0;
 
@@ -53,14 +53,17 @@ auto start = chrono::steady_clock::now();
 
 int number_of_pongs = 0;
 
-int received_a_message_flag = 0;
+//int received_a_message_flag = 0;
 
 double sum_of_pong_delay = 0;
 
 time_t start_time;
 time_t end_time;
 
-string recv_message;
+time_t start_time_for_ping_send;
+time_t end_time_for_ping_send;
+
+//string recv_message;
 
 struct Received_Messages_Struct
 {
@@ -74,7 +77,6 @@ struct Connected_Client
 {
     sockaddr_in Address;
     int is_active_flag;
-    int vector_pos;
 };
 
 vector<Connected_Client> vector_connected_clients;
@@ -118,14 +120,11 @@ if (iResult != 0) {
 
 }
 
-int send_to(char sendbuffer[1024])
+int send_to(char sendbuffer[1024], sockaddr_in Sender)
 {
-    //strcpy_s(SendBuf, "Salut de la server!");
-    //---------------------------------------------
-    // Send a datagram to the receiver
     wprintf(L"Sending a datagram to the receiver...\n");
     iResult = sendto(RecvSocket,
-        SendBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, sizeof(SenderAddr));
+        SendBuf, BufLen, 0, (SOCKADDR*)&Sender, sizeof(Sender));
     if (iResult == SOCKET_ERROR) {
         wprintf(L"sendto failed with error: %d\n", WSAGetLastError());
         closesocket(RecvSocket);
@@ -136,70 +135,74 @@ int send_to(char sendbuffer[1024])
 
 void message_handler()
 {
-    recv_message = received_messages_list.front().Sender_Message;
-    received_messages_list.pop_front();
-    if (recv_message[0] == HELLO) // if hello message received
+    while (received_messages_list.size() > 0)
     {
-        address_found = false;
-        // search for the address and port in the vector
-        for (struct sockaddr_in connected_client : clients) {
-            if (connected_client.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr &&
-                connected_client.sin_port == SenderAddr.sin_port)
+        Received_Messages_Struct recv_message = received_messages_list.front();
+        received_messages_list.pop_front();
+        if (recv_message.Sender_Message[0] == HELLO) // if hello message received
+        {
+            address_found = false;
+            // search for the address and port in the vector
+            for (Connected_Client& iterator_clients : vector_connected_clients)
             {
-                address_found = true;
-                break;
+                if (iterator_clients.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr &&
+                    iterator_clients.Address.sin_port == recv_message.Sender_Address.sin_port)
+                {
+                    address_found = true;
+                    break;
+                }
+            }
+            if (address_found == false) // if the address and port are new add them to the vector
+            {
+                char Sender_addr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &recv_message.Sender_Address.sin_addr, Sender_addr, sizeof(Sender_addr));
+                printf("%s with port %d connected! \n", Sender_addr, recv_message.Sender_Address.sin_port);
+
+                Connected_Client new_client;
+                new_client.Address = recv_message.Sender_Address;
+                new_client.is_active_flag = 0;
+                vector_connected_clients.push_back(new_client);
+
+                SendBuf[0] = ACK;
+                send_to(SendBuf, recv_message.Sender_Address);
             }
         }
-        if (address_found == false) // if the address and port are new add them to the vector
+        if (initiate_ping_pong == 1) // initiate ping-pong mecanism
         {
-            received_a_message_flag = 1;
-            char Sender_addr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, &SenderAddr.sin_addr, Sender_addr, sizeof(Sender_addr));
-            printf("%s with port %d connected! \n", Sender_addr, SenderAddr.sin_port);
-            clients.push_back(SenderAddr);
-            SendBuf[0] = ACK;
-            send_to(SendBuf);
+            start_time = time(NULL);
+            start_time_for_ping_send = time(NULL);
+            SendBuf[0] = PING;
+            initiate_ping_pong = 2;
+            send_to(SendBuf, recv_message.Sender_Address);
         }
-    }
-    if (initiate_ping_pong == 1) // initiate ping-pong mecanism
-    {
-        start_time = time(NULL);
-        SendBuf[0] = PING;
-        initiate_ping_pong = 2;
-        send_to(SendBuf);
-    }
-    if (recv_message[0] == PONG) // if PONG message received
-    {
-        end_time = time(NULL);
-        received_a_message_flag = 1;
-
-        for (Connected_Client& iterator : vector_connected_clients)
+        if (recv_message.Sender_Message[0] == PONG) // if PONG message received
         {
-            if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
-                && iterator.Address.sin_port == SenderAddr.sin_port)
+            end_time = time(NULL);
+
+            for (Connected_Client& iterator : vector_connected_clients)
             {
-                iterator.is_active_flag = 1;
+                if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
+                    && iterator.Address.sin_port == recv_message.Sender_Address.sin_port)
+                {
+                    iterator.is_active_flag = 1;
+                }
             }
-        }
 
-        number_of_pongs++;
-        sum_of_pong_delay += (double)(end_time - start_time);
-        printf("From client: PONG \n");
-        SendBuf[0] = PING;
-        start_time = time(NULL);
-        send_to(SendBuf);
+            number_of_pongs++;
+            sum_of_pong_delay += (double)(end_time - start_time);
+            printf("From client: PONG \n");
+            SendBuf[0] = PING;
+            start_time = time(NULL);
+            send_to(SendBuf, recv_message.Sender_Address);
+        }
+        // if ping pong mecanism wasn't initiated yet, initiate it now
+        if (initiate_ping_pong == 0)
+            initiate_ping_pong = 1;
     }
-    // if ping pong mecanism wasn't initiated yet, initiate it now
-    if (initiate_ping_pong == 0)
-        initiate_ping_pong = 1;
-    recv_message.clear();
 }
 
 void recv()
 {
-    //-----------------------------------------------
-    // Call the recvfrom function to receive datagrams
-    // on the bound socket.
     wprintf(L"Receiving datagrams...\n");
     iResult = recvfrom(RecvSocket,
         RecvBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, &SenderAddrSize);
@@ -219,30 +222,6 @@ void recv()
     new_message_received.Sender_Address = SenderAddr;
     new_message_received.Sender_Message = RecvBuf;
     received_messages_list.push_back(new_message_received);
-
-    client_found = 0;
-    Connected_Client new_client;
-    new_client.Address = SenderAddr;
-    new_client.is_active_flag = 0;
-    for (Connected_Client& iterator: vector_connected_clients)
-    {
-        if (iterator.Address.sin_addr.S_un.S_addr == SenderAddr.sin_addr.S_un.S_addr
-            && iterator.Address.sin_port == SenderAddr.sin_port)
-        {
-            client_found = 1;
-            break;
-        }
-    }
-    if (client_found == 0)
-    {
-        new_client.vector_pos = vector_connected_clients.size();
-        vector_connected_clients.push_back(new_client);
-    }
-
-    /*for (Connected_Client& iterator : vector_connected_clients)
-    {
-        printf("\nActive flag: %d \n", iterator.is_active_flag);
-    }*/
 
     if (received_messages_list.size() > 0)
     {
