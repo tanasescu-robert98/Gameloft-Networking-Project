@@ -37,6 +37,8 @@ auto start = chrono::steady_clock::now();
 
 int received_a_message_flag = 0;
 
+int previous_second = 0;
+
 enum Message_Type
 {
     HELLO = 1,
@@ -81,7 +83,7 @@ int send_to(char sendbuffer[1024])
     //strcpy_s(SendBuf, "0Salut de la client!");
     //---------------------------------------------
     // Send a datagram to the receiver
-    wprintf(L"Sending a datagram to the receiver...\n");
+    //wprintf(L"Sending a datagram to the receiver...\n");
     iResult = sendto(SendSocket,
         SendBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR) {
@@ -115,7 +117,7 @@ void recv()
     //-----------------------------------------------
     // Call the recvfrom function to receive datagrams
     // on the bound socket.
-    wprintf(L"Receiving datagrams...\n");
+    //wprintf(L"Receiving datagrams...\n");
     iResult = recvfrom(SendSocket,
         RecvBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, &RecvAddrSize);
     if (iResult == SOCKET_ERROR) {
@@ -135,24 +137,29 @@ void recv()
 void time_handler()
 {
     auto end = chrono::steady_clock::now();
-    cout << "Elapsed time in seconds: "
-        << chrono::duration_cast<chrono::seconds>(end - start).count()
-        << " sec" << endl;
-    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
-        && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
+    auto current_second = chrono::duration_cast<chrono::seconds>(end - start).count();
+    if (current_second != previous_second)
     {
-        if (received_a_message_flag == 1)
+        cout << "Elapsed time in seconds: "
+            << chrono::duration_cast<chrono::seconds>(end - start).count()
+            << " sec" << endl;
+        if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
+            && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
         {
-            cout << "There were some received messages!" << endl;
+            if (received_a_message_flag == 1)
+            {
+                cout << "There were some received messages from server!" << endl;
+            }
+            else
+            {
+                cout << "There were no received messages. Closing connection!" << endl;
+                closesocket(SendSocket);
+                WSACleanup();
+                exit(0);
+            }
+            received_a_message_flag = 0;
         }
-        else
-        {
-            cout << "There were no received messages. Closing connection!" << endl;
-            closesocket(SendSocket);
-            WSACleanup();
-            exit(0);
-        }
-        received_a_message_flag = 0;
+        previous_second = current_second;
     }
 }
 
@@ -180,7 +187,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(1000); //sleeps 10 ms
+        Sleep(500); //sleeps 10 ms
     }
     //---------------------------------------------
     // When the application is finished sending, close the socket.

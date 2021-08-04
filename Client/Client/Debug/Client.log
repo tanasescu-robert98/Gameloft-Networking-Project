@@ -1,4 +1,9 @@
 ﻿  Client.cpp
-D:\Github\gameloft_multiplayer\Client\Client\Client.cpp(77): warning C4715: 'Initialize': not all control paths return a value
-D:\Github\gameloft_multiplayer\Client\Client\Client.cpp(93): warning C4715: 'send_to': not all control paths return a value
+D:\Github\gameloft_multiplayer\Client\Client\Client.cpp(162,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+          with
+          [
+              _Rep=__int64
+          ]
+D:\Github\gameloft_multiplayer\Client\Client\Client.cpp(95): warning C4715: 'send_to': not all control paths return a value
+D:\Github\gameloft_multiplayer\Client\Client\Client.cpp(79): warning C4715: 'Initialize': not all control paths return a value
   Client.vcxproj -> D:\Github\gameloft_multiplayer\Client\Debug\Client.exe
