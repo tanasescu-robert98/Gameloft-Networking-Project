@@ -55,7 +55,7 @@ int number_of_pongs = 0;
 
 //int received_a_message_flag = 0;
 
-double sum_of_pong_delay = 0;
+float sum_of_pong_delay = 0;
 
 time_t start_time;
 time_t end_time;
@@ -77,6 +77,10 @@ struct Connected_Client
 {
     sockaddr_in Address;
     int is_active_flag;
+    chrono::high_resolution_clock::time_point ping_sent_timestamp;
+    chrono::high_resolution_clock::time_point pong_received_timestamp;
+    float sum_of_pong_delay_client;
+    float number_of_pongs_client;
 };
 
 vector<Connected_Client> vector_connected_clients;
@@ -163,6 +167,8 @@ void message_handler()
                 Connected_Client new_client;
                 new_client.Address = recv_message.Sender_Address;
                 new_client.is_active_flag = 0;
+                new_client.sum_of_pong_delay_client = 0;
+                new_client.number_of_pongs_client = 0;
                 vector_connected_clients.push_back(new_client);
 
                 SendBuf[0] = ACK;
@@ -173,19 +179,28 @@ void message_handler()
         {
             end_time = time(NULL);
 
+            //printf("\n\n END : %lld\n\n", end_time);
+
             for (Connected_Client& iterator : vector_connected_clients)
             {
                 if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
                     && iterator.Address.sin_port == recv_message.Sender_Address.sin_port)
                 {
                     iterator.is_active_flag = 1;
+                    auto pong_time_stamp = chrono::steady_clock::now();
+                    iterator.pong_received_timestamp = pong_time_stamp;
+                    iterator.number_of_pongs_client++;
+                    number_of_pongs++;
+                    iterator.sum_of_pong_delay_client += chrono::duration_cast<chrono::milliseconds>(iterator.pong_received_timestamp - iterator.ping_sent_timestamp).count();
+                    printf("From client: PONG \n");
+
                 }
             }
 
-            number_of_pongs++;
-            sum_of_pong_delay += (double)(end_time - start_time);
+            /*number_of_pongs++;
+            sum_of_pong_delay += (float)end_time - start_time;
             cout << "Sum of pong_delay_is: " << sum_of_pong_delay << endl;
-            printf("From client: PONG \n");
+            printf("From client: PONG \n");*/
         }
     }
 }
@@ -218,12 +233,26 @@ void recv()
     }
 }
 
+void send_ping_to_clients()
+{
+    for (Connected_Client& iterator : vector_connected_clients)
+    {
+        SendBuf[0] = PING;
+        start_time = time(NULL);
+        auto ping_time_stamp = chrono::steady_clock::now();
+        iterator.ping_sent_timestamp = ping_time_stamp;
+        send_to(SendBuf, iterator.Address);
+    }
+}
+
 void time_handler()
 {
     auto end = chrono::steady_clock::now();
     auto current_second = chrono::duration_cast<chrono::seconds>(end - start).count();
     if (current_second != previous_second)
     {
+        send_ping_to_clients();
+
         cout << "Elapsed time in seconds: "
             << chrono::duration_cast<chrono::seconds>(end - start).count()
             << " sec" << endl;
@@ -250,45 +279,32 @@ void time_handler()
             {
                 vector_connected_clients.erase(vector_connected_clients.begin() + i);
             }
-            cout << "\nSIZE of vector_connected_clients : " << vector_connected_clients.size() << endl;
+            cout << "\nNumber of connected clients : " << vector_connected_clients.size() << endl;
         }
         if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
         {
-            cout << "Number of pongs received in 10 seconds : " << number_of_pongs << endl;
-            if (number_of_pongs > 0)
-                cout << "With the average delay : " << sum_of_pong_delay / number_of_pongs << " seconds" << endl;
-            number_of_pongs = 0;
-            sum_of_pong_delay = 0;
+            for (Connected_Client& iterator : vector_connected_clients)
+            {
+                cout << endl;
+                char client_addr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, &iterator.Address.sin_addr, client_addr, sizeof(client_addr));
+                cout << "Number of pongs received in 10 seconds from " << client_addr << " with port " << iterator.Address.sin_port << " : " << iterator.number_of_pongs_client << endl;
+                if (iterator.number_of_pongs_client > 0)
+                {
+                    cout << "With the average delay : " << iterator.sum_of_pong_delay_client / iterator.number_of_pongs_client << " milliseconds" << endl;
+                }
+                iterator.sum_of_pong_delay_client = 0;
+                iterator.number_of_pongs_client = 0;
+                sum_of_pong_delay = 0;
+                cout << endl;
+            }
         }
         previous_second = current_second;
     }
 }
 
-void send_ping_to_clients()
-{
-    for (Connected_Client& iterator : vector_connected_clients)
-    {
-        SendBuf[0] = PING;
-        start_time = time(NULL);
-        send_to(SendBuf, iterator.Address);
-    }
-}
-
 void Update()
 {
-    if (initialize_ping_sending == 0)
-    {
-        start_time_for_ping_send = time(NULL);
-        initialize_ping_sending = 1;
-    }
-    end_time_for_ping_send = time(NULL);
-    if (end_time_for_ping_send - start_time_for_ping_send >= 1)
-    {
-        //printf("\n \n DAAAAAAA \n \n");
-        send_ping_to_clients();
-        initialize_ping_sending = 0;
-    }
-
     recv();
 
     time_handler();
@@ -298,7 +314,6 @@ void Update()
 
 int main()
 {
-    
     auto start = chrono::steady_clock::now();
     int return_initialize;
     return_initialize = Initialize();
@@ -309,7 +324,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(500); //sleeps 10 ms
+        //Sleep(30); //sleeps 10 ms
     }
 
     //-----------------------------------------------
