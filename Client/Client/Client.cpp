@@ -17,7 +17,7 @@ using namespace std;
 // Link with ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-int iResult;
+int iResult = 0;
 WSADATA wsaData;
 
 SOCKET SendSocket = INVALID_SOCKET;
@@ -179,7 +179,7 @@ void Update()
 int main()
 {
     auto start = chrono::steady_clock::now();
-    int return_initialize;
+    int return_initialize = -1;
     return_initialize = Initialize();
     if (return_initialize == 1)
         return 0;

@@ -1,10 +1,1 @@
-﻿  Server.cpp
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(268,31): warning C4018: '<': signed/unsigned mismatch
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(307,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
-          with
-          [
-              _Rep=__int64
-          ]
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(127): warning C4715: 'Initialize': not all control paths return a value
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(151): warning C4715: 'send_to': not all control paths return a value
-  Server.vcxproj -> D:\Github\gameloft_multiplayer\Server\Debug\Server.exe
+﻿

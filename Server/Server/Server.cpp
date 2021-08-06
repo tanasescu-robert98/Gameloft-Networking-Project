@@ -76,11 +76,11 @@ list<Received_Messages_Struct> received_messages_list;
 struct Connected_Client
 {
     sockaddr_in Address;
-    int is_active_flag;
+    int is_active_flag = 0;
     chrono::high_resolution_clock::time_point ping_sent_timestamp;
     chrono::high_resolution_clock::time_point pong_received_timestamp;
-    float sum_of_pong_delay_client;
-    float number_of_pongs_client;
+    float sum_of_pong_delay_client = 0;
+    float number_of_pongs_client = 0;
 };
 
 vector<Connected_Client> vector_connected_clients;
@@ -103,27 +103,25 @@ int Initialize()
     //-----------------------------------------------
     // Create a receiver socket to receive datagrams
     RecvSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-if (RecvSocket == INVALID_SOCKET) {
-    wprintf(L"socket failed with error %d\n", WSAGetLastError());
-    return 1;
-}
+    if (RecvSocket == INVALID_SOCKET) {
+        wprintf(L"socket failed with error %d\n", WSAGetLastError());
+        return 1;
+    }
 
-u_long iMode = 1;
-ioctlsocket(RecvSocket, FIONBIO, &iMode);
+    u_long iMode = 1;
+    ioctlsocket(RecvSocket, FIONBIO, &iMode);
 
-//-----------------------------------------------
-// Bind the socket to any address and the specified port.
-RecvAddr.sin_family = AF_INET;
-RecvAddr.sin_port = htons(Port);
-RecvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    //-----------------------------------------------
+    // Bind the socket to any address and the specified port.
+    RecvAddr.sin_family = AF_INET;
+    RecvAddr.sin_port = htons(Port);
+    RecvAddr.sin_addr.s_addr = htonl(INADDR_ANY);
 
-iResult = bind(RecvSocket, (SOCKADDR*)&RecvAddr, sizeof(RecvAddr));
-if (iResult != 0) {
-    wprintf(L"bind failed with error %d\n", WSAGetLastError());
-    return 1;
-}
-
-
+    iResult = bind(RecvSocket, (SOCKADDR*)&RecvAddr, sizeof(RecvAddr));
+    if (iResult != 0) {
+        wprintf(L"bind failed with error %d\n", WSAGetLastError());
+        return 1;
+    }
 }
 
 int send_to(char sendbuffer[1024], sockaddr_in Sender)
@@ -178,7 +176,7 @@ void message_handler()
                 break;
 
             case PONG:
-                end_time = time(NULL);
+                //end_time = time(NULL);
                 for (Connected_Client& iterator : vector_connected_clients)
                 {
                     if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
@@ -232,7 +230,7 @@ void send_ping_to_clients()
     for (Connected_Client& iterator : vector_connected_clients)
     {
         SendBuf[0] = PING;
-        start_time = time(NULL);
+        /*start_time = time(NULL);*/
         auto ping_time_stamp = chrono::steady_clock::now();
         iterator.ping_sent_timestamp = ping_time_stamp;
         send_to(SendBuf, iterator.Address);
@@ -254,7 +252,7 @@ void time_handler()
             && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
         {
             vector<int> clients_to_erase;
-            for (int i = 0; i < vector_connected_clients.size(); i++)
+            for (unsigned int i = 0; i < vector_connected_clients.size(); i++)
             {
                 char ip_of_client[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &vector_connected_clients[i].Address.sin_addr, ip_of_client, sizeof(ip_of_client));
@@ -309,7 +307,7 @@ void Update()
 int main()
 {
     auto start = chrono::steady_clock::now();
-    int return_initialize;
+    int return_initialize = -1;
     return_initialize = Initialize();
 
     if (return_initialize == 1)
