@@ -145,62 +145,56 @@ void message_handler()
     {
         Received_Messages_Struct recv_message = received_messages_list.front();
         received_messages_list.pop_front();
-        if (recv_message.Sender_Message[0] == HELLO) // if hello message received
+        switch (recv_message.Sender_Message[0])
         {
-            address_found = false;
-            // search for the address and port in the vector
-            for (Connected_Client& iterator_clients : vector_connected_clients)
-            {
-                if (iterator_clients.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr &&
-                    iterator_clients.Address.sin_port == recv_message.Sender_Address.sin_port)
+            case HELLO:
+                address_found = false;
+                // search for the address and port in the vector
+                for (Connected_Client& iterator_clients : vector_connected_clients)
                 {
-                    address_found = true;
-                    break;
+                    if (iterator_clients.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr &&
+                        iterator_clients.Address.sin_port == recv_message.Sender_Address.sin_port)
+                    {
+                        address_found = true;
+                        break;
+                    }
                 }
-            }
-            if (address_found == false) // if the address and port are new add them to the vector
-            {
-                char Sender_addr[INET_ADDRSTRLEN];
-                inet_ntop(AF_INET, &recv_message.Sender_Address.sin_addr, Sender_addr, sizeof(Sender_addr));
-                printf("%s with port %d connected! \n", Sender_addr, recv_message.Sender_Address.sin_port);
-
-                Connected_Client new_client;
-                new_client.Address = recv_message.Sender_Address;
-                new_client.is_active_flag = 0;
-                new_client.sum_of_pong_delay_client = 0;
-                new_client.number_of_pongs_client = 0;
-                vector_connected_clients.push_back(new_client);
-
-                SendBuf[0] = ACK;
-                send_to(SendBuf, recv_message.Sender_Address);
-            }
-        }
-        else if (recv_message.Sender_Message[0] == PONG) // if PONG message received
-        {
-            end_time = time(NULL);
-
-            //printf("\n\n END : %lld\n\n", end_time);
-
-            for (Connected_Client& iterator : vector_connected_clients)
-            {
-                if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
-                    && iterator.Address.sin_port == recv_message.Sender_Address.sin_port)
+                if (address_found == false) // if the address and port are new add them to the vector
                 {
-                    iterator.is_active_flag = 1;
-                    auto pong_time_stamp = chrono::steady_clock::now();
-                    iterator.pong_received_timestamp = pong_time_stamp;
-                    iterator.number_of_pongs_client++;
-                    number_of_pongs++;
-                    iterator.sum_of_pong_delay_client += chrono::duration_cast<chrono::milliseconds>(iterator.pong_received_timestamp - iterator.ping_sent_timestamp).count();
-                    printf("From client: PONG \n");
+                    char Sender_addr[INET_ADDRSTRLEN];
+                    inet_ntop(AF_INET, &recv_message.Sender_Address.sin_addr, Sender_addr, sizeof(Sender_addr));
+                    printf("%s with port %d connected! \n", Sender_addr, recv_message.Sender_Address.sin_port);
 
+                    Connected_Client new_client;
+                    new_client.Address = recv_message.Sender_Address;
+                    new_client.is_active_flag = 0;
+                    new_client.sum_of_pong_delay_client = 0;
+                    new_client.number_of_pongs_client = 0;
+                    vector_connected_clients.push_back(new_client);
+
+                    SendBuf[0] = ACK;
+                    send_to(SendBuf, recv_message.Sender_Address);
                 }
-            }
+                break;
 
-            /*number_of_pongs++;
-            sum_of_pong_delay += (float)end_time - start_time;
-            cout << "Sum of pong_delay_is: " << sum_of_pong_delay << endl;
-            printf("From client: PONG \n");*/
+            case PONG:
+                end_time = time(NULL);
+                for (Connected_Client& iterator : vector_connected_clients)
+                {
+                    if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
+                        && iterator.Address.sin_port == recv_message.Sender_Address.sin_port)
+                    {
+                        iterator.is_active_flag = 1;
+                        auto pong_time_stamp = chrono::steady_clock::now();
+                        iterator.pong_received_timestamp = pong_time_stamp;
+                        iterator.number_of_pongs_client++;
+                        number_of_pongs++;
+                        iterator.sum_of_pong_delay_client += chrono::duration_cast<chrono::milliseconds>(iterator.pong_received_timestamp - iterator.ping_sent_timestamp).count();
+                        printf("From client: PONG \n");
+
+                    }
+                }
+                break;
         }
     }
 }
@@ -222,7 +216,7 @@ void recv()
     }
 
     Received_Messages_Struct new_message_received;
-    new_message_received.Sender_Message.clear();
+    //new_message_received.Sender_Message.clear();
     new_message_received.Sender_Address = SenderAddr;
     new_message_received.Sender_Message = RecvBuf;
     received_messages_list.push_back(new_message_received);
@@ -324,7 +318,7 @@ int main()
     while (true)
     {
         Update();
-        //Sleep(30); //sleeps 10 ms
+        Sleep(30); //sleeps 10 ms
     }
 
     //-----------------------------------------------
