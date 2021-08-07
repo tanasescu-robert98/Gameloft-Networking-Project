@@ -128,7 +128,6 @@ int Initialize()
 
 int send_to(char sendbuffer[1024], sockaddr_in Sender)
 {
-    //wprintf(L"Sending a datagram to the receiver...\n");
     iResult = sendto(RecvSocket,
         SendBuf, BufLen, 0, (SOCKADDR*)&Sender, sizeof(Sender));
     if (iResult == SOCKET_ERROR) {
@@ -178,7 +177,6 @@ void message_handler()
                 break;
 
             case PONG:
-                //end_time = time(NULL);
                 for (Connected_Client& iterator : vector_connected_clients)
                 {
                     if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
@@ -190,8 +188,10 @@ void message_handler()
                         iterator.number_of_pongs_client++;
                         number_of_pongs++;
                         iterator.sum_of_pong_delay_client += chrono::duration_cast<chrono::milliseconds>(iterator.pong_received_timestamp - iterator.ping_sent_timestamp).count();
-                        printf("From client: PONG \n");
-
+                        char ip[INET_ADDRSTRLEN];
+                        inet_ntop(AF_INET, &iterator.Address.sin_addr, ip, sizeof(ip));
+                        cout << "From " << ip << " with port " << iterator.Address.sin_port << ": PONG" << endl;
+                        //printf("From client: PONG \n");
                     }
                 }
                 break;
@@ -201,14 +201,12 @@ void message_handler()
 
 void recv()
 {
-    //wprintf(L"Receiving datagrams...\n");
     iResult = recvfrom(RecvSocket,
         RecvBuf, BufLen, 0, (SOCKADDR*)&SenderAddr, &SenderAddrSize);
     if (iResult == SOCKET_ERROR) {
         if (WSAGetLastError() == WSAEWOULDBLOCK)
         {
             recv_finished = 0;
-            //printf("\n WOULD BLOCK \n");
             return;
         }
         else
@@ -218,15 +216,9 @@ void recv()
     }
 
     Received_Messages_Struct new_message_received;
-    //new_message_received.Sender_Message.clear();
     new_message_received.Sender_Address = SenderAddr;
     new_message_received.Sender_Message = RecvBuf;
     received_messages_list.push_back(new_message_received);
-
-    if (received_messages_list.size() > 0)
-    {
-        message_handler();
-    }
 }
 
 void send_ping_to_clients()
@@ -234,7 +226,6 @@ void send_ping_to_clients()
     for (Connected_Client& iterator : vector_connected_clients)
     {
         SendBuf[0] = PING;
-        /*start_time = time(NULL);*/
         auto ping_time_stamp = chrono::steady_clock::now();
         iterator.ping_sent_timestamp = ping_time_stamp;
         send_to(SendBuf, iterator.Address);
@@ -245,7 +236,7 @@ void time_handler()
 {
     auto end = chrono::steady_clock::now();
     auto current_second = chrono::duration_cast<chrono::seconds>(end - start).count();
-    if (current_second != previous_second)
+    if (current_second - previous_second >= 1)
     {
         send_ping_to_clients();
 
@@ -256,18 +247,18 @@ void time_handler()
             && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
         {
             vector<int> clients_to_erase;
-            for (unsigned int i = 0; i < vector_connected_clients.size(); i++)
+            for (int i = 0; i < vector_connected_clients.size(); i++)
             {
                 char ip_of_client[INET_ADDRSTRLEN];
                 inet_ntop(AF_INET, &vector_connected_clients[i].Address.sin_addr, ip_of_client, sizeof(ip_of_client));
                 if (vector_connected_clients[i].is_active_flag == 0)
                 {
-                    cout << "There were no received messages from " << ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << ".Closing connection!" << endl;
+                    cout << "\nThere were no received messages from " << ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << ".Closing connection!" << endl;
                     clients_to_erase.push_back(i);
                 }
                 else
                 {
-                    cout << "There were some received messages from " << ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << "!" << endl;
+                    cout << "\nThere were some received messages from " << ip_of_client << " with port " << vector_connected_clients[i].Address.sin_port << "!" << endl;
                 }
                 vector_connected_clients[i].is_active_flag = 0;
             }
@@ -275,7 +266,8 @@ void time_handler()
             {
                 vector_connected_clients.erase(vector_connected_clients.begin() + i);
             }
-            cout << "\nNumber of connected clients : " << vector_connected_clients.size() << endl;
+            cout << "Number of connected clients : " << vector_connected_clients.size() << endl;
+            cout << endl;
         }
         if (chrono::duration_cast<chrono::seconds>(end - start).count() % 10 == 0)
         {
@@ -287,7 +279,7 @@ void time_handler()
                 cout << "Number of pongs received in 10 seconds from " << client_addr << " with port " << iterator.Address.sin_port << " : " << iterator.number_of_pongs_client << endl;
                 if (iterator.number_of_pongs_client > 0)
                 {
-                    cout << "With the average delay : " << iterator.sum_of_pong_delay_client / iterator.number_of_pongs_client << " milliseconds" << endl;
+                    cout << "With the average delay : " << iterator.sum_of_pong_delay_client / iterator.number_of_pongs_client << " ms" << endl;
                 }
                 iterator.sum_of_pong_delay_client = 0;
                 iterator.number_of_pongs_client = 0;
@@ -307,6 +299,8 @@ void Update()
     }
 
     recv_finished = -1;
+
+    message_handler();
     
     time_handler();
 
