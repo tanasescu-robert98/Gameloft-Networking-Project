@@ -91,6 +91,8 @@ int initialize_ping_sending = 0;
 
 int previous_second = 0;
 
+int recv_finished = -1;
+
 int Initialize()
 {
     //-----------------------------------------------
@@ -205,6 +207,8 @@ void recv()
     if (iResult == SOCKET_ERROR) {
         if (WSAGetLastError() == WSAEWOULDBLOCK)
         {
+            recv_finished = 0;
+            //printf("\n WOULD BLOCK \n");
             return;
         }
         else
@@ -297,8 +301,13 @@ void time_handler()
 
 void Update()
 {
-    recv();
+    while (recv_finished != 0)
+    {
+        recv();
+    }
 
+    recv_finished = -1;
+    
     time_handler();
 
     memset(RecvBuf, 0, strlen(RecvBuf));

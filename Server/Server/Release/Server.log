@@ -1,13 +1,12 @@
 ﻿  Server.cpp
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(294,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(298,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
           with
           [
               _Rep=__int64
           ]
   Generating code
-  Previous IPDB not found, fall back to full compilation.
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(138): warning C4715: 'send_to': not all control paths return a value
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(125): warning C4715: 'Initialize': not all control paths return a value
-  All 277 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  104 of 277 functions (37.5%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    17 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Server.vcxproj -> D:\Github\gameloft_multiplayer\Server\Release\Server.exe
