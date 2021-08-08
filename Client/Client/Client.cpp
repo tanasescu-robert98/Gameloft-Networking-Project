@@ -80,10 +80,6 @@ int Initialize()
 
 int send_to(char sendbuffer[1024])
 {
-    //strcpy_s(SendBuf, "0Salut de la client!");
-    //---------------------------------------------
-    // Send a datagram to the receiver
-    //wprintf(L"Sending a datagram to the receiver...\n");
     iResult = sendto(SendSocket,
         SendBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR) {
@@ -114,10 +110,6 @@ void message_handler()
 
 void recv()
 {
-    //-----------------------------------------------
-    // Call the recvfrom function to receive datagrams
-    // on the bound socket.
-    //wprintf(L"Receiving datagrams...\n");
     iResult = recvfrom(SendSocket,
         RecvBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, &RecvAddrSize);
     if (iResult == SOCKET_ERROR) {
@@ -187,7 +179,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(30); //sleeps 10 ms
+        //Sleep(30); //sleeps 10 ms
     }
     //---------------------------------------------
     // When the application is finished sending, close the socket.

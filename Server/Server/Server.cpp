@@ -191,6 +191,7 @@ void message_handler()
                         char ip[INET_ADDRSTRLEN];
                         inet_ntop(AF_INET, &iterator.Address.sin_addr, ip, sizeof(ip));
                         cout << "From " << ip << " with port " << iterator.Address.sin_port << ": PONG" << endl;
+                        break;
                         //printf("From client: PONG \n");
                     }
                 }
@@ -319,7 +320,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(30); //sleeps 10 ms
+        //Sleep(30); //sleeps 10 ms
     }
 
     //-----------------------------------------------
