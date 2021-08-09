@@ -1,14 +1,13 @@
 ﻿  Server.cpp
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(251,31): warning C4018: '<': signed/unsigned mismatch
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(291,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(235,31): warning C4018: '<': signed/unsigned mismatch
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(274,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
           with
           [
               _Rep=__int64
           ]
   Generating code
-  Previous IPDB and IOBJ mismatch, fall back to full compilation.
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(127): warning C4715: 'Initialize': not all control paths return a value
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(139): warning C4715: 'send_to': not all control paths return a value
-  All 279 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  2 of 279 functions ( 0.7%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    1 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   Server.vcxproj -> D:\Github\gameloft_multiplayer\Server\Release\Server.exe

@@ -26,7 +26,6 @@ WSADATA wsaData;
 SOCKET RecvSocket;
 struct sockaddr_in RecvAddr;
 
-//vector<struct sockaddr_in> clients;
 int numar_adrese = 0;
 int address_found = 0;
 
@@ -50,20 +49,6 @@ enum Message_Type
 int initiate_ping_pong = 0;
 
 auto start = chrono::steady_clock::now();
-
-int number_of_pongs = 0;
-
-//int received_a_message_flag = 0;
-
-float sum_of_pong_delay = 0;
-
-time_t start_time;
-time_t end_time;
-
-time_t start_time_for_ping_send;
-time_t end_time_for_ping_send;
-
-//string recv_message;
 
 struct Received_Messages_Struct
 {
@@ -182,17 +167,15 @@ void message_handler()
                     if (iterator.Address.sin_addr.S_un.S_addr == recv_message.Sender_Address.sin_addr.S_un.S_addr
                         && iterator.Address.sin_port == recv_message.Sender_Address.sin_port)
                     {
-                        iterator.is_active_flag = 1;
                         auto pong_time_stamp = chrono::steady_clock::now();
+                        iterator.is_active_flag = 1;
                         iterator.pong_received_timestamp = pong_time_stamp;
                         iterator.number_of_pongs_client++;
-                        number_of_pongs++;
                         iterator.sum_of_pong_delay_client += chrono::duration_cast<chrono::milliseconds>(iterator.pong_received_timestamp - iterator.ping_sent_timestamp).count();
                         char ip[INET_ADDRSTRLEN];
                         inet_ntop(AF_INET, &iterator.Address.sin_addr, ip, sizeof(ip));
                         cout << "From " << ip << " with port " << iterator.Address.sin_port << ": PONG" << endl;
                         break;
-                        //printf("From client: PONG \n");
                     }
                 }
                 break;
@@ -244,6 +227,7 @@ void time_handler()
         cout << "Elapsed time in seconds: "
             << chrono::duration_cast<chrono::seconds>(end - start).count()
             << " sec" << endl;
+
         if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
             && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
         {
@@ -284,7 +268,6 @@ void time_handler()
                 }
                 iterator.sum_of_pong_delay_client = 0;
                 iterator.number_of_pongs_client = 0;
-                sum_of_pong_delay = 0;
                 cout << endl;
             }
         }

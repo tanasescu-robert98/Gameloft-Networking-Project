@@ -130,7 +130,7 @@ void time_handler()
 {
     auto end = chrono::steady_clock::now();
     auto current_second = chrono::duration_cast<chrono::seconds>(end - start).count();
-    if (current_second != previous_second)
+    if (current_second - previous_second >= 1)
     {
         cout << "Elapsed time in seconds: "
             << chrono::duration_cast<chrono::seconds>(end - start).count()
