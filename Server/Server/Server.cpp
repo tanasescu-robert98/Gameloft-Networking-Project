@@ -251,6 +251,7 @@ void time_handler()
             {
                 vector_connected_clients.erase(vector_connected_clients.begin() + i);
             }
+            clients_to_erase.clear();
             cout << "Number of connected clients : " << vector_connected_clients.size() << endl;
             cout << endl;
         }
@@ -303,7 +304,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(30); //sleeps 10 ms
+        //Sleep(30); //sleeps 10 ms
     }
 
     //-----------------------------------------------

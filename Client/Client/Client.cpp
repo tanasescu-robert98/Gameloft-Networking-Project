@@ -179,7 +179,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(30); //sleeps 10 ms
+        //Sleep(30); //sleeps 10 ms
     }
     //---------------------------------------------
     // When the application is finished sending, close the socket.
