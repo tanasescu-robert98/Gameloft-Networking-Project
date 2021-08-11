@@ -179,6 +179,9 @@ void message_handler()
                     }
                 }
                 break;
+
+            default:
+                break;
         }
     }
 }
@@ -304,7 +307,7 @@ int main()
     while (true)
     {
         Update();
-        //Sleep(30); //sleeps 10 ms
+        Sleep(30); //sleeps 10 ms
     }
 
     //-----------------------------------------------

@@ -75,7 +75,8 @@ int Initialize()
     // and the specified port number.
     RecvAddr.sin_family = AF_INET;
     RecvAddr.sin_port = htons(Port);
-    RecvAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //RecvAddr.sin_addr.s_addr = inet_addr("3.125.153.107");
+    RecvAddr.sin_addr.s_addr = inet_addr("3.84.53.73");
 }
 
 int send_to(char sendbuffer[1024])
@@ -104,6 +105,8 @@ void message_handler()
             printf("From server: PING \n");
             SendBuf[0] = PONG;
             send_to(SendBuf);
+            break;
+        default:
             break;
     }
 }
@@ -179,7 +182,7 @@ int main()
     while (true)
     {
         Update();
-        //Sleep(30); //sleeps 10 ms
+        Sleep(30); //sleeps 10 ms
     }
     //---------------------------------------------
     // When the application is finished sending, close the socket.

@@ -1,6 +1,6 @@
 ﻿  Server.cpp
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(235,31): warning C4018: '<': signed/unsigned mismatch
-D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(275,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(238,31): warning C4018: '<': signed/unsigned mismatch
+D:\Github\gameloft_multiplayer\Server\Server\Server.cpp(278,27): warning C4244: '=': conversion from '_Rep' to 'int', possible loss of data
           with
           [
               _Rep=__int64
