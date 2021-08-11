@@ -17,7 +17,7 @@ using namespace std;
 // Link with ws2_32.lib
 #pragma comment(lib, "Ws2_32.lib")
 
-int iResult;
+int iResult = 0;
 WSADATA wsaData;
 
 SOCKET SendSocket = INVALID_SOCKET;
@@ -36,6 +36,8 @@ bool isConnected = false;
 auto start = chrono::steady_clock::now();
 
 int received_a_message_flag = 0;
+
+int previous_second = 0;
 
 enum Message_Type
 {
@@ -73,15 +75,12 @@ int Initialize()
     // and the specified port number.
     RecvAddr.sin_family = AF_INET;
     RecvAddr.sin_port = htons(Port);
-    RecvAddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    //RecvAddr.sin_addr.s_addr = inet_addr("3.125.153.107");
+    RecvAddr.sin_addr.s_addr = inet_addr("3.84.53.73");
 }
 
 int send_to(char sendbuffer[1024])
 {
-    //strcpy_s(SendBuf, "0Salut de la client!");
-    //---------------------------------------------
-    // Send a datagram to the receiver
-    wprintf(L"Sending a datagram to the receiver...\n");
     iResult = sendto(SendSocket,
         SendBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, sizeof(RecvAddr));
     if (iResult == SOCKET_ERROR) {
@@ -107,28 +106,13 @@ void message_handler()
             SendBuf[0] = PONG;
             send_to(SendBuf);
             break;
+        default:
+            break;
     }
-    //if (RecvBuf[0] == ACK) // if client received ACK message from server
-    //{
-    //    received_a_message_flag = 1;
-    //    isConnected = true;
-    //    printf("From server: Welcome to the server! You are connected! \n");
-    //}
-    //else if (RecvBuf[0] == PING) // if client received PING message from server
-    //{
-    //    received_a_message_flag = 1;
-    //    printf("From server: PING \n");
-    //    SendBuf[0] = PONG;
-    //    send_to(SendBuf);
-    //}
 }
 
 void recv()
 {
-    //-----------------------------------------------
-    // Call the recvfrom function to receive datagrams
-    // on the bound socket.
-    wprintf(L"Receiving datagrams...\n");
     iResult = recvfrom(SendSocket,
         RecvBuf, BufLen, 0, (SOCKADDR*)&RecvAddr, &RecvAddrSize);
     if (iResult == SOCKET_ERROR) {
@@ -141,7 +125,37 @@ void recv()
             wprintf(L"recvfrom failed with error %d\n", WSAGetLastError());
         }
     }
+
     message_handler();
+}
+
+void time_handler()
+{
+    auto end = chrono::steady_clock::now();
+    auto current_second = chrono::duration_cast<chrono::seconds>(end - start).count();
+    if (current_second - previous_second >= 1)
+    {
+        cout << "Elapsed time in seconds: "
+            << chrono::duration_cast<chrono::seconds>(end - start).count()
+            << " sec" << endl;
+        if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
+            && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
+        {
+            if (received_a_message_flag == 1)
+            {
+                cout << "There were some received messages from server!" << endl;
+            }
+            else
+            {
+                cout << "There were no received messages. Closing connection!" << endl;
+                closesocket(SendSocket);
+                WSACleanup();
+                exit(0);
+            }
+            received_a_message_flag = 0;
+        }
+        previous_second = current_second;
+    }
 }
 
 void Update()
@@ -154,32 +168,13 @@ void Update()
 
     recv();
 
-    auto end = chrono::steady_clock::now();
-    cout << "Elapsed time in seconds: "
-        << chrono::duration_cast<chrono::seconds>(end - start).count()
-        << " sec" << endl;
-    if (chrono::duration_cast<chrono::seconds>(end - start).count() % 15 == 0
-        && chrono::duration_cast<chrono::seconds>(end - start).count() != 0)
-    {
-        if (received_a_message_flag == 1)
-        {
-            cout << "There were some received messages!" << endl;
-        }
-        else
-        {
-            cout << "There were no received messages. Closing connection!" << endl;
-            closesocket(SendSocket);
-            WSACleanup();
-            exit(0);
-        }
-        received_a_message_flag = 0;
-    }
+    time_handler();
 }
 
 int main()
 {
     auto start = chrono::steady_clock::now();
-    int return_initialize;
+    int return_initialize = -1;
     return_initialize = Initialize();
     if (return_initialize == 1)
         return 0;
@@ -187,7 +182,7 @@ int main()
     while (true)
     {
         Update();
-        Sleep(5000); //sleeps 10 ms
+        Sleep(30); //sleeps 10 ms
     }
     //---------------------------------------------
     // When the application is finished sending, close the socket.
