@@ -1,2 +1,2 @@
 # gameloft_multiplayer
-Gameloft_Multiplayer
+Gameloft Networking Project involving Client-Server Communication
